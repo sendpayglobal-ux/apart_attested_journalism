@@ -203,6 +203,12 @@
 
   const network = new vis.Network(container, networkData, options);
 
+  // Set initial zoom level (zoom out)
+  setTimeout(() => {
+    network.fit({ animation: false });
+    network.moveTo({ scale: 0.5, animation: false });
+  }, 100);
+
   // node click
   network.on('click', async function (params) {
     if (params.nodes && params.nodes.length) {
