@@ -173,7 +173,7 @@
   );
 
   const container = networkContainer;
-  const data = { nodes, edges };
+  const networkData = { nodes, edges };
 
   const options = {
     nodes: {
@@ -201,7 +201,7 @@
     }
   };
 
-  const network = new vis.Network(container, data, options);
+  const network = new vis.Network(container, networkData, options);
 
   // node click
   network.on('click', async function (params) {
