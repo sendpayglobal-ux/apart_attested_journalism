@@ -11,24 +11,128 @@
   const sentList = qs('#sentList');
   const trustScoreEl = qs('#trustScore');
 
-  async function fetchGraph() {
-    const res = await fetch('/api/graph');
-    return res.json();
+  // Load data directly from JSON files
+  async function loadData() {
+    const [votesRes, accountsRes] = await Promise.all([
+      fetch('data/votes.json'),
+      fetch('data/accounts.json')
+    ]);
+    const votes = await votesRes.json();
+    const accounts = await accountsRes.json();
+    return { votes, accounts };
   }
 
-  async function fetchVotesForAddress(addr) {
-    const res = await fetch('/api/votes/' + addr);
-    if (!res.ok) return null;
-    return res.json();
+  // Build graph from votes and accounts (client-side)
+  function buildGraph(votes, accounts) {
+    const TRUSTED_DOMAINS = [
+      'nytimes.com',
+      'bbc.com',
+      'reuters.com',
+      'apnews.com',
+      'theguardian.com',
+      'aljazeera.com'
+    ];
+
+    const nodes = {};
+    const edges = [];
+
+    // Build edges and node base entries
+    votes.forEach(v => {
+      const from = v.vote.from.toLowerCase();
+      const to = v.vote.to.toLowerCase();
+
+      if (!nodes[from]) nodes[from] = { id: from };
+      if (!nodes[to]) nodes[to] = { id: to };
+
+      edges.push({
+        source: from,
+        target: to,
+        weight: v.vote.weight !== undefined ? v.vote.weight : (v.vote.trust ? Number(v.vote.trust) : 1),
+        txHash: v.txHash,
+        timestamp: v.vote.timestamp || null
+      });
+    });
+
+    // Enrich nodes with accounts data
+    Object.keys(nodes).forEach(addr => {
+      const account = accounts[addr] || {
+        createdAt: null,
+        credentials: []
+      };
+
+      const credentials = account.credentials || [];
+      const credentialDomains = credentials.map(c => c.domain);
+      const credentialCount = credentials.length;
+
+      const hasTrustedDomain = credentialDomains.some(d =>
+        TRUSTED_DOMAINS.includes(d)
+      );
+
+      let accountAgeDays = null;
+      if (account.createdAt) {
+        accountAgeDays = Math.floor(
+          (Date.now() - account.createdAt) / (1000 * 86400)
+        );
+      }
+
+      const outboundEdges = edges.filter(e => e.source === addr).length;
+
+      const isSybil =
+        (!hasTrustedDomain &&
+          credentialCount === 0 &&
+          accountAgeDays !== null &&
+          accountAgeDays < 3) ||
+        outboundEdges > 20;
+
+      nodes[addr] = {
+        id: addr,
+        label: addr.slice(0, 10) + '...',
+        credentialCount,
+        credentialDomains,
+        hasTrustedDomain,
+        accountAgeDays,
+        outboundEdges,
+        isSybil
+      };
+    });
+
+    return {
+      nodes: Object.values(nodes),
+      edges
+    };
   }
 
-  async function fetchTrust(addr) {
-    const res = await fetch('/api/trust/' + addr);
-    if (!res.ok) return null;
-    return res.json();
+  // Get votes for a specific address
+  function getVotesForAddress(votes, addr) {
+    const address = addr.toLowerCase();
+    const received = votes.filter(v => v.vote.to.toLowerCase() === address);
+    const sent = votes.filter(v => v.vote.from.toLowerCase() === address);
+    return { address, received, sent };
   }
 
-  const graph = await fetchGraph();
+  // Simple trust score calculation (simplified version)
+  function calculateSimpleTrust(votes, accounts, addr) {
+    const address = addr.toLowerCase();
+    const account = accounts[address];
+
+    if (!account) return { overallScore: 0 };
+
+    const TRUSTED_DOMAINS = ['nytimes.com', 'bbc.com', 'reuters.com', 'apnews.com', 'theguardian.com'];
+    const credentials = account.credentials || [];
+    const hasTrustedDomain = credentials.some(c => TRUSTED_DOMAINS.includes(c.domain));
+
+    const received = votes.filter(v => v.vote.to.toLowerCase() === address);
+    const receivedScore = Math.min(received.length / 10, 1.0);
+
+    const credScore = hasTrustedDomain ? 1.0 : (credentials.length > 0 ? 0.5 : 0);
+
+    const overallScore = (receivedScore * 0.4 + credScore * 0.6);
+
+    return { overallScore };
+  }
+
+  const data = await loadData();
+  const graph = buildGraph(data.votes, data.accounts);
 
   // 🚀 ENRICHED NODE DATASET (colors, sizes, labels)
   const nodes = new vis.DataSet(
@@ -111,16 +215,16 @@
 
   async function selectNode(id) {
     selectedAddressEl.textContent = "Selected: " + id;
-    const votes = await fetchVotesForAddress(id);
+    const votesData = getVotesForAddress(data.votes, id);
 
     receivedList.innerHTML = '';
     sentList.innerHTML = '';
 
-    if (votes) {
-      if (votes.received.length === 0) {
+    if (votesData) {
+      if (votesData.received.length === 0) {
         receivedList.innerHTML = '<div class="item">No received votes</div>';
       } else {
-        votes.received.forEach(r => {
+        votesData.received.forEach(r => {
           const div = document.createElement('div');
           div.className = "item";
           div.innerHTML = `<div><strong>From:</strong> ${r.vote.from}</div><div style="font-size:12px;color:#999;">Trust: ${r.vote.trust || r.vote.weight || 1} • tx: ${r.txHash}</div>`;
@@ -128,10 +232,10 @@
         });
       }
 
-      if (votes.sent.length === 0) {
+      if (votesData.sent.length === 0) {
         sentList.innerHTML = '<div class="item">No sent votes</div>';
       } else {
-        votes.sent.forEach(s => {
+        votesData.sent.forEach(s => {
           const div = document.createElement('div');
           div.className = "item";
           div.innerHTML = `<div><strong>To:</strong> ${s.vote.to}</div><div style="font-size:12px;color:#999;">Trust: ${s.vote.trust || s.vote.weight || 1} • tx: ${s.txHash}</div>`;
@@ -140,7 +244,7 @@
       }
     }
 
-    const trust = await fetchTrust(id);
+    const trust = calculateSimpleTrust(data.votes, data.accounts, id);
     if (trust && typeof trust.overallScore !== "undefined") {
       trustScoreEl.textContent = `Overall score: ${(trust.overallScore * 100).toFixed(2)}%`;
     } else {
