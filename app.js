@@ -1,4 +1,7 @@
 // app.js - simple Trust Explorer (uses vis-network)
+import { calculateTrustVector } from './src/trust.js';
+import { setBrowserData } from './src/storage.js';
+
 (async function () {
   function qs(sel) { return document.querySelector(sel); }
 
@@ -13,13 +16,19 @@
 
   // Load data directly from JSON files
   async function loadData() {
-    const [votesRes, accountsRes] = await Promise.all([
+    const [votesRes, accountsRes, configRes] = await Promise.all([
       fetch('data/votes.json'),
-      fetch('data/accounts.json')
+      fetch('data/accounts.json'),
+      fetch('data/config.json')
     ]);
     const votes = await votesRes.json();
     const accounts = await accountsRes.json();
-    return { votes, accounts };
+    const config = await configRes.json();
+
+    // Set data for browser-based storage module
+    setBrowserData(votes, accounts, config);
+
+    return { votes, accounts, config };
   }
 
   // Build graph from votes and accounts (client-side)
@@ -110,27 +119,6 @@
     return { address, received, sent };
   }
 
-  // Simple trust score calculation (simplified version)
-  function calculateSimpleTrust(votes, accounts, addr) {
-    const address = addr.toLowerCase();
-    const account = accounts[address];
-
-    if (!account) return { overallScore: 0 };
-
-    const TRUSTED_DOMAINS = ['nytimes.com', 'bbc.com', 'reuters.com', 'apnews.com', 'theguardian.com'];
-    const credentials = account.credentials || [];
-    const hasTrustedDomain = credentials.some(c => TRUSTED_DOMAINS.includes(c.domain));
-
-    const received = votes.filter(v => v.vote.to.toLowerCase() === address);
-    const receivedScore = Math.min(received.length / 10, 1.0);
-
-    const credScore = hasTrustedDomain ? 1.0 : (credentials.length > 0 ? 0.5 : 0);
-
-    const overallScore = (receivedScore * 0.4 + credScore * 0.6);
-
-    return { overallScore };
-  }
-
   const data = await loadData();
   const graph = buildGraph(data.votes, data.accounts);
 
@@ -155,9 +143,9 @@
           ${n.id}<br>
           <b>Credentials:</b> ${n.credentialCount}<br>
           <b>Trusted newsroom:</b> ${n.hasTrustedDomain}<br>
-          <b>Sybil:</b> ${n.isSybil}<br>
           <b>Account age:</b> ${n.accountAgeDays || "n/a"} days<br>
         `
+          //<b>Sybil:</b> ${n.isSybil}<br>
       };
     })
   );
@@ -250,7 +238,9 @@
       }
     }
 
-    const trust = calculateSimpleTrust(data.votes, data.accounts, id);
+    // Use a trusted node as the consistent querying address (point of view)
+    const queryingAddress = '0x6157364ab3a83aa357f769af11314b0b573c91c1'; // nytimes.com node
+    const trust = calculateTrustVector(id, 0.2, queryingAddress);
     if (trust && typeof trust.overallScore !== "undefined") {
       trustScoreEl.textContent = `Overall score: ${(trust.overallScore * 100).toFixed(2)}%`;
     } else {
