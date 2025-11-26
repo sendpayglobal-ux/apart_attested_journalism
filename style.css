@@ -62,9 +62,10 @@ body {
   min-width: 80px;
 }
 
+/* FIX: use dynamic viewport height (mobile safe) */
 .layout {
   display: flex;
-  height: calc(100vh - 68px);
+  height: calc(100dvh - 68px);   /* FIXED */
   flex-direction: row;
 }
 
@@ -72,6 +73,10 @@ body {
   flex: 1;
   background: var(--panel);
   touch-action: pan-x pan-y pinch-zoom;
+
+  /* FIX: also use dynamic vh here */
+  height: 55dvh;                 /* FIXED */
+  min-height: 300px;
 }
 
 .sidebar {
@@ -82,9 +87,24 @@ body {
   overflow-y: auto;
 }
 
-.sidebar h3 { margin: 0 0 16px; font-size: 1.1rem; }
-#selectedAddress { font-size: 0.9rem; word-break: break-all; margin: 8px 0 12px; opacity: 0.9; }
-#trustScore { font-size: 1.1rem; font-weight: 700; color: #a5f3fc; margin-bottom: 20px; }
+.sidebar h3 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+}
+
+#selectedAddress {
+  font-size: 0.9rem;
+  word-break: break-all;
+  margin: 8px 0 12px;
+  opacity: 0.9;
+}
+
+#trustScore {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #a5f3fc;
+  margin-bottom: 20px;
+}
 
 .list {
   background: rgba(255,255,255,0.03);
@@ -101,21 +121,37 @@ body {
   color: var(--muted);
 }
 
-.list .item:last-child { border-bottom: none; }
+.list .item:last-child {
+  border-bottom: none;
+}
 
-/* Mobile First – Responsive Breakpoint */
+/* MOBILE FIXES */
 @media (max-width: 768px) {
-  .topbar { padding: 12px; flex-direction: column; align-items: stretch; }
-  .topbar h1 { font-size: 1.3rem; text-align: center; }
-  .search { max-width: none; }
+  .topbar {
+    padding: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .topbar h1 {
+    font-size: 1.3rem;
+    text-align: center;
+  }
+
+  .search {
+    max-width: none;
+  }
 
   .layout {
     flex-direction: column;
+
+    /* FIX: ensure proper vertical sizing */
     height: auto;
+    min-height: calc(100dvh - 68px);   /* FIXED */
   }
 
   .network {
-    height: 55vh;
+    height: 55dvh;      /* FIXED */
     min-height: 300px;
   }
 
@@ -132,5 +168,7 @@ body {
     font-size: 1rem;
   }
 
-  .list { max-height: 180px; }
+  .list {
+    max-height: 180px;
+  }
 }
