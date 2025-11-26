@@ -5,7 +5,11 @@
   --accent: #1f6feb;
 }
 
-* { box-sizing: border-box; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
 body {
   margin: 0;
@@ -14,123 +18,189 @@ body {
   color: #e6eef6;
   font-size: 16px;
   -webkit-font-smoothing: antialiased;
+  min-height: 100dvh;
+  overflow-x: hidden;
 }
 
+/* Header */
 .topbar {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  background: rgba(255,255,255,0.02);
-  border-bottom: 1px solid rgba(255,255,255,0.05);
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(8px);
 }
 
 .topbar h1 {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 700;
+  text-align: center;
+  color: #a5f3fc;
 }
 
 .search {
   display: flex;
-  gap: 8px;
-  min-width: 220px;
-  flex: 1;
-  max-width: 400px;
+  gap: 10px;
+  width: 100%;
 }
 
 .search input {
   flex: 1;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.05);
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.07);
   color: white;
-  font-size: 0.95rem;
+  font-size: 1rem;
 }
 
-.search button, button {
-  padding: 10px 16px;
+.search button,
+button {
+  padding: 13px 20px;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   background: var(--accent);
   color: white;
   font-weight: 600;
   cursor: pointer;
-  min-width: 80px;
+  min-height: 50px;
+  font-size: 1rem;
 }
 
+/* Main Layout */
 .layout {
   display: flex;
-  height: calc(100vh - 68px);
-  flex-direction: row;
+  flex-direction: column;
+  min-height: calc(100dvh - 124px);
 }
 
+/* Graph Container — THE ULTIMATE FIX FOR BLACK GAP */
 .network {
   flex: 1;
   background: var(--panel);
+  min-height: 48dvh;
+  max-height: 72dvh;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
   touch-action: pan-x pan-y pinch-zoom;
 }
 
-.sidebar {
-  width: 360px;
-  padding: 20px;
-  background: rgba(0,0,0,0.15);
-  border-left: 1px solid rgba(255,255,255,0.05);
-  overflow-y: auto;
+/* THIS IS THE MAGIC — eliminates black gap forever */
+.network,
+.network canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
-.sidebar h3 { margin: 0 0 16px; font-size: 1.1rem; }
-#selectedAddress { font-size: 0.9rem; word-break: break-all; margin: 8px 0 12px; opacity: 0.9; }
-#trustScore { font-size: 1.1rem; font-weight: 700; color: #a5f3fc; margin-bottom: 20px; }
+/* Sidebar */
+.sidebar {
+  width: 100%;
+  padding: 20px 16px;
+  background: rgba(0, 0, 0, 0.18);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.sidebar h3 {
+  margin: 0 0 16px;
+  font-size: 1.3rem;
+  color: #a5f3fc;
+}
+
+#selectedAddress {
+  font-size: 0.92rem;
+  word-break: break-all;
+  margin: 12px 0;
+  opacity: 0.88;
+  line-height: 1.4;
+}
+
+#trustScore {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #a5f3fc;
+  margin: 8px 0 24px;
+}
 
 .list {
-  background: rgba(255,255,255,0.03);
-  border-radius: 8px;
-  padding: 10px;
-  max-height: 240px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 14px;
+  max-height: 300px;
   overflow-y: auto;
-  font-size: 0.875rem;
+  font-size: 0.94rem;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .list .item {
-  padding: 10px 0;
-  border-bottom: 1px dashed rgba(255,255,255,0.1);
+  padding: 12px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.15);
   color: var(--muted);
 }
 
-.list .item:last-child { border-bottom: none; }
+.list .item:last-child {
+  border-bottom: none;
+}
 
-/* Mobile First – Responsive Breakpoint */
-@media (max-width: 768px) {
-  .topbar { padding: 12px; flex-direction: column; align-items: stretch; }
-  .topbar h1 { font-size: 1.3rem; text-align: center; }
-  .search { max-width: none; }
+/* Tablet & Desktop: Side-by-side */
+@media (min-width: 769px) {
+  .topbar {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 24px;
+  }
+
+  .topbar h1 {
+    text-align: left;
+    font-size: 1.4rem;
+  }
+
+  .search {
+    width: auto;
+    max-width: 440px;
+  }
 
   .layout {
-    flex-direction: column;
-    height: auto;
+    flex-direction: row;
+    min-height: calc(100dvh - 90px);
   }
 
   .network {
-    height: 55vh;
-    min-height: 300px;
+    min-height: 100%;
+    max-height: none;
   }
 
   .sidebar {
-    width: 100%;
-    border-left: none;
-    border-top: 1px solid rgba(255,255,255,0.08);
+    width: 400px;
+    border-top: none;
+    border-left: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 24px;
+  }
+}
+
+/* Extra safety for landscape phones with small height */
+@media (max-height: 500px) and (orientation: landscape) {
+  .network {
+    min-height: 62dvh;
+  }
+  .sidebar {
     padding: 16px;
   }
-
-  button, .search button {
-    width: 100%;
-    padding: 14px;
-    font-size: 1rem;
+  .list {
+    max-height: 200px;
   }
-
-  .list { max-height: 180px; }
 }
