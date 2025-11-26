@@ -145,7 +145,6 @@ import { setBrowserData } from './src/storage.js';
           <b>Trusted newsroom:</b> ${n.hasTrustedDomain}<br>
           <b>Account age:</b> ${n.accountAgeDays || "n/a"} days<br>
         `
-          //<b>Sybil:</b> ${n.isSybil}<br>
       };
     })
   );
@@ -191,11 +190,18 @@ import { setBrowserData } from './src/storage.js';
 
   const network = new vis.Network(container, networkData, options);
 
-  // Set initial zoom level (zoom out)
-  setTimeout(() => {
+  // --- ✅ UI FIX 1: Force initial render properly
+  requestAnimationFrame(() => {
+    network.redraw();
     network.fit({ animation: false });
     network.moveTo({ scale: 0.5, animation: false });
-  }, 100);
+  });
+
+  // --- ✅ UI FIX 2: Auto-resize when container size changes
+  new ResizeObserver(() => {
+    network.redraw();
+    network.fit({ animation: false });
+  }).observe(networkContainer);
 
   // node click
   network.on('click', async function (params) {
@@ -238,9 +244,9 @@ import { setBrowserData } from './src/storage.js';
       }
     }
 
-    // Use a trusted node as the consistent querying address (point of view)
-    const queryingAddress = '0x6157364ab3a83aa357f769af11314b0b573c91c1'; // nytimes.com node
+    const queryingAddress = '0x6157364ab3a83aa357f769af11314b0b573c91c1'; // nytimes.com
     const trust = calculateTrustVector(id, 0.2, queryingAddress);
+
     if (trust && typeof trust.overallScore !== "undefined") {
       trustScoreEl.textContent = `Overall score: ${(trust.overallScore * 100).toFixed(2)}%`;
     } else {
