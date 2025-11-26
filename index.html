@@ -24,24 +24,61 @@
       <div id="network" class="network"></div>
 
       <aside class="sidebar">
-        <h3>Details</h3>
-        <div id="selectedAddress">Selected: —</div>
-        <div id="trustScore"></div>
 
-        <section>
-          <h4>Received</h4>
-          <div id="receivedList" class="list"></div>
-        </section>
+        <!-- MOBILE COLLAPSE BUTTON -->
+        <button id="toggleSidebar" class="sidebar-toggle">Details ▼</button>
 
-        <section>
-          <h4>Sent</h4>
-          <div id="sentList" class="list"></div>
-        </section>
+        <!-- COLLAPSIBLE PANEL -->
+        <div id="sidebarContent">
+          <h3>Details</h3>
 
-        <button id="clearBtn">Clear selection</button>
+          <div id="selectedAddress">Selected: —</div>
+          <div id="trustScore"></div>
+
+          <section>
+            <h4>Received</h4>
+            <div id="receivedList" class="list"></div>
+          </section>
+
+          <section>
+            <h4>Sent</h4>
+            <div id="sentList" class="list"></div>
+          </section>
+
+          <button id="clearBtn">Clear selection</button>
+        </div>
+
       </aside>
     </main>
+
   </div>
+
+  <!-- SIDEBAR TOGGLE SCRIPT -->
+  <script type="module">
+    const toggleBtn = document.getElementById("toggleSidebar");
+    const content = document.getElementById("sidebarContent");
+    let open = false;
+
+    const update = () => {
+      if (window.innerWidth >= 900) {
+        toggleBtn.style.display = "none";
+        content.style.display = "block";
+        return;
+      }
+
+      toggleBtn.style.display = "block";
+      content.style.display = open ? "block" : "none";
+      toggleBtn.textContent = open ? "Details ▲" : "Details ▼";
+    };
+
+    toggleBtn.onclick = () => {
+      open = !open;
+      update();
+    };
+
+    window.onresize = update;
+    update();
+  </script>
 
   <script type="module" src="app.js"></script>
 </body>
