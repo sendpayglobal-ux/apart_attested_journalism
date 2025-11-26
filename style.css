@@ -64,10 +64,16 @@ html, body {
 /* === SIDEBAR === */
 .sidebar {
   width: 320px;
-  padding: 16px;
+  padding: 0;          /* changed because content wrapper has padding */
   background: #161b22;
   border-left: 1px solid #30363d;
+  overflow: hidden;    /* let inner scroll handle */
+}
+
+#sidebarContent {
+  padding: 16px;
   overflow-y: auto;
+  height: calc(100% - 48px); /* leaves space for toggle btn on mobile */
 }
 
 .list .item {
@@ -75,6 +81,20 @@ html, body {
   padding: 6px;
   background: #21262d;
   border-radius: 6px;
+}
+
+/* === MOBILE SIDEBAR TOGGLE BUTTON === */
+.sidebar-toggle {
+  display: none;
+  width: 100%;
+  padding: 12px;
+  text-align: left;
+  background: #21262d;
+  border: none;
+  border-bottom: 1px solid #30363d;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
 }
 
 /* === MOBILE FIXES === */
@@ -85,7 +105,15 @@ html, body {
 
   .sidebar {
     width: 100%;
-    height: 260px;
+    height: auto;
+  }
+
+  #sidebarContent {
+    max-height: 260px;
+  }
+
+  .sidebar-toggle {
+    display: block;
   }
 
   .network {
@@ -98,8 +126,8 @@ html, body {
     width: 120px;
   }
 
-  .sidebar {
-    height: 240px;
+  #sidebarContent {
+    max-height: 240px;
   }
 
   .network {
