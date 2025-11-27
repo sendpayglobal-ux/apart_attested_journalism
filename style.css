@@ -2,19 +2,21 @@
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
+  height: 100dvh;
   width: 100%;
   overflow: hidden;
-  font-family: system-ui, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
   background: #0d1117;
-  color: #ffffff;
+  color: #f0f6fc;
 }
 
+/* === APP CONTAINER === */
 #app {
   height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
+  background: #0d1117;
 }
 
 /* === TOP BAR === */
@@ -22,19 +24,66 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 16px;
+  padding: 12px 18px;
   background: #161b22;
   border-bottom: 1px solid #30363d;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  z-index: 10;
 }
 
+.topbar h1 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #58a6ff;        /* GitHub blue accent */
+}
+
+/* Search */
 .search {
   display: flex;
-  gap: 6px;
+  gap: 8px;
+  align-items: center;
 }
 
 .search input {
-  padding: 6px;
-  width: 190px;
+  padding: 9px 12px;
+  width: 210px;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #21262d;
+  color: #f0f6fc;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.search input:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
+}
+
+/* Buttons – beautiful blue accent */
+button, .search button, .sidebar-toggle {
+  padding: 9px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #238636;           /* Rich green → replaced with GitHub success blue */
+  background: #1f6feb;           /* Primary blue – clean & modern */
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: 40px;
+}
+
+button:hover, .search button:hover, .sidebar-toggle:hover {
+  background: #1a5bc4;
+  transform: translateY(-1px);
+}
+
+button:active, .search button:active {
+  transform: translateY(0);
 }
 
 /* === MAIN LAYOUT === */
@@ -46,7 +95,7 @@ html, body {
   position: relative;
 }
 
-/* === NETWORK === */
+/* === NETWORK (Graph) === */
 .network {
   flex: 1;
   position: relative;
@@ -59,78 +108,136 @@ html, body {
 .network > canvas {
   width: 100% !important;
   height: 100% !important;
+  display: block !important;
 }
 
 /* === SIDEBAR === */
 .sidebar {
-  width: 320px;
-  padding: 0;          /* changed because content wrapper has padding */
+  width: 340px;
   background: #161b22;
   border-left: 1px solid #30363d;
-  overflow: hidden;    /* let inner scroll handle */
+  display: flex;
+  flex-direction: column;
+  box-shadow: -2px 0 10px rgba(0,0,0,0.2);
 }
 
 #sidebarContent {
-  padding: 16px;
+  padding: 20px;
   overflow-y: auto;
-  height: calc(100% - 48px); /* leaves space for toggle btn on mobile */
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #30363d transparent;
+}
+
+#sidebarContent::-webkit-scrollbar {
+  width: 6px;
+}
+#sidebarContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+#sidebarContent::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+
+/* Sidebar sections */
+.sidebar h3, .sidebar h4 {
+  color: #58a6ff;
+  margin: 0 0 12px 0;
+  font-weight: 600;
+}
+
+#selectedAddress {
+  font-size: 13px;
+  word-break: break-all;
+  background: #21262d;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  margin: 8px 0 16px;
+}
+
+#trustScore {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #79c0ff;
+  margin: 8px 0 20px;
+}
+
+/* List items */
+.list {
+  margin-top: 8px;
 }
 
 .list .item {
-  margin-bottom: 8px;
-  padding: 6px;
+  margin-bottom: 10px;
+  padding: 12px;
   background: #21262d;
-  border-radius: 6px;
+  border-radius: 8px;
+  border: 1px solid #30363d;
+  font-size: 13.5px;
+  color: #c9d1d9;
+  transition: all 0.2s;
 }
 
-/* === MOBILE SIDEBAR TOGGLE BUTTON === */
+.list .item:hover {
+  background: #1a1f26;
+  border-color: #58a6ff33;
+}
+
+/* === MOBILE SIDEBAR TOGGLE === */
 .sidebar-toggle {
   display: none;
   width: 100%;
-  padding: 12px;
-  text-align: left;
-  background: #21262d;
-  border: none;
-  border-bottom: 1px solid #30363d;
+  padding: 14px 20px;
+  background: #1f6feb;
   color: white;
-  font-size: 16px;
-  cursor: pointer;
+  font-weight: 600;
+  font-size: 15px;
+  border-bottom: 1px solid #30363d;
 }
 
-/* === MOBILE FIXES === */
+/* === MOBILE RESPONSIVE === */
 @media (max-width: 900px) {
   .layout {
     flex-direction: column;
   }
-
   .sidebar {
     width: 100%;
     height: auto;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
   }
-
+  .sidebar.open {
+    transform: translateY(0);
+  }
   #sidebarContent {
-    max-height: 260px;
+    max-height: 320px;
+    padding-bottom: 20px;
   }
-
   .sidebar-toggle {
     display: block;
   }
-
   .network {
-    height: calc(100% - 260px);
+    height: calc(100vh - 58px);
+    padding-bottom: 52px; /* space for toggle button */
   }
 }
 
 @media (max-width: 600px) {
   .search input {
-    width: 120px;
+    width: 140px;
+    font-size: 15px;
   }
-
+  .topbar h1 {
+    font-size: 1.2rem;
+  }
   #sidebarContent {
-    max-height: 240px;
-  }
-
-  .network {
-    height: calc(100% - 240px);
+    max-height: 300px;
   }
 }
