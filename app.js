@@ -141,7 +141,6 @@ import { setBrowserData } from './src/storage.js';
         color: { background: color, border: "#ffffff22" },
         title: `
           ${n.id}<br>
-            <b>Domains:</b> ${domainText}<br>
           <b>Credentials:</b> ${n.credentialCount}<br>
           <b>Trusted newsroom:</b> ${n.hasTrustedDomain}<br>
           <b>Account age:</b> ${n.accountAgeDays || "n/a"} days<br>
